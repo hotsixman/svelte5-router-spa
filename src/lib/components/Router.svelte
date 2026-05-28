@@ -3,7 +3,6 @@
     import type { ErrorComponent, Route, RoutingFunction } from "../types.ts";
     import RouteRecognizer from "route-recognizer";
     import Error from "./Error.svelte";
-    import { load } from "$lib/util/navigation.js";
 
     type Props = {
         route: Route;
@@ -19,7 +18,6 @@
     let routeRecognizer = $derived(getRouteRecognizer(route));
 
     onMount(() => {
-        load();
         window.addEventListener('urlchange', onUrlChange);
         window.addEventListener("popstate", onUrlChange);
         onUrlChange();
