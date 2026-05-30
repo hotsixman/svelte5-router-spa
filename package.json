@@ -1,6 +1,6 @@
 {
 	"name": "svelte5-router-spa",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/kit": "^2.57.0",
