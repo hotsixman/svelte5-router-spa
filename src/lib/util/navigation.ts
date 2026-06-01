@@ -20,8 +20,17 @@ export function cleanupLink() {
     document.removeEventListener('click', anchorClickCallback);
 }
 function anchorClickCallback(event: MouseEvent) {
-    if (event.target && event.target instanceof HTMLAnchorElement && event.target.origin === location.origin && event.target.getAttribute('data-disable-spa') === null && (!event.target.target || event.target.target === "_self") && !event.ctrlKey && !event.shiftKey) {
+    const target = event.target instanceof Element ? event.target.closest('a') : null;
+
+    if (
+        target && 
+        target instanceof HTMLAnchorElement && 
+        target.origin === location.origin && 
+        target.getAttribute('data-disable-spa') === null && 
+        (!target.target || target.target === "_self") && 
+        !event.ctrlKey && !event.shiftKey
+    ) {
         event.preventDefault();
-        goto(event.target.href);
+        goto(target.href);
     }
 }

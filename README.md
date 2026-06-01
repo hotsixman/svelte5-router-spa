@@ -1,65 +1,107 @@
-# Svelte library
+# Svelte5 router for SPA
 
-Everything you need to build a Svelte library, powered by [`sv`](https://npmjs.com/package/sv).
+`npm i svelte5-router-spa`
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+Svelte 5 router for Single Page Applications (SPA). It uses `route-recognizer` for flexible path matching and supports asynchronous component loading.
 
-## Creating a project
+## Usage
 
-If you're seeing this, you've probably already done this step. Congrats!
+### 1. Define your routes
 
-```sh
-# create a new project in the current directory
-npx sv create
+Routes are defined as an object where keys are paths and values are `RoutingFunction`. A `RoutingFunction` can be asynchronous and should return an object with `component` and `props`.
 
-# create a new project in my-app
-npx sv create my-app
+```ts
+// routes.ts
+import type { Route } from "svelte5-router-spa";
+import Home from "./components/Home.svelte";
+
+export const routes: Route = {
+    "/": async () => {
+        // You can fetch data or dynamic import components here
+        return {
+            component: Home,
+            props: { title: "Welcome Home" }
+        };
+    },
+    "/user/:id": async (params) => {
+        const { id } = params;
+        const UserProfile = (await import("./components/UserProfile.svelte")).default;
+        return {
+            component: UserProfile,
+            props: { userId: id }
+        };
+    }
+};
 ```
 
-To recreate this project with the same configuration:
+### 2. Use the Router component
 
-```sh
-# recreate this project
-bun x sv@0.15.3 create --template library --types ts --install bun ./
+Place the `Router` component in your main application file (e.g., `App.svelte`).
+
+```svelte
+<script lang="ts">
+    import { Router } from "svelte5-router-spa";
+    import { routes } from "./routes";
+</script>
+
+<Router route={routes} />
 ```
 
-## Developing
+### 3. Navigation
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+You can use the provided navigation utilities to move between pages.
 
-```sh
-npm run dev
+```svelte
+<script lang="ts">
+    import { navigation } from "svelte5-router-spa";
+    const { goto } = navigation;
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+    function navigate() {
+        goto("/home");
+    }
+</script>
+
+<button onclick={navigate}>Go Home</button>
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+#### Automatic Anchor Handling
 
-## Building
+To automatically handle standard `<a>` tags for SPA navigation, use `setupLink` in your root layout or entry point.
 
-To build your library:
+```svelte
+<script lang="ts">
+    import { onMount } from "svelte";
+    import { navigation } from "svelte5-router-spa";
 
-```sh
-npm pack
+    onMount(() => {
+        navigation.setupLink();
+    });
+</script>
 ```
 
-To create a production version of your showcase app:
+## API
 
-```sh
-npm run build
-```
+### Router Props
 
-You can preview the production build with `npm run preview`.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `route` | `Route` | **Required.** The route configuration object. |
+| `errorComponent` | `Component` | Optional. Component to show for 404 or 500 errors. |
+| `loadingComponent` | `Component` | Optional. Component to show while a route is being resolved. |
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+### Navigation Utilities (`navigation`)
 
-## Publishing
+- `goto(url: string, data?: any)`: Navigate to a new URL.
+- `pushState(data: any, url: string)`: Wrapper for `history.pushState`.
+- `replaceState(data: any, url: string)`: Wrapper for `history.replaceState`.
+- `setupLink()`: Adds a global click listener to handle same-origin `<a>` tags automatically.
+- `cleanupLink()`: Removes the global click listener.
 
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
+### Types
 
-To publish your library to [npm](https://www.npmjs.com):
+#### `Route`
+An object mapping paths to `RoutingFunction`.
 
-```sh
-npm publish
-```
+#### `RoutingFunction`
+`(params?: Params) => MaybePromise<{ component: Component, props: any }>`
+A function that receives URL parameters and returns (optionally as a Promise) the component and its props to render.
